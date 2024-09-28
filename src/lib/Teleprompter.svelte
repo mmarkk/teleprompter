@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
+	import { browser } from '$app/environment';
 
 	let text = '';
 	let file: File | null = null;
@@ -10,6 +11,8 @@
 	let textareaRef: HTMLTextAreaElement;
 	let isFullscreen = false;
 	let fullscreenControlsRef: HTMLDivElement;
+	let animationFrameId: number | null = null;
+	let lastTimestamp: number | null = null;
 
 	$: if (file) {
 		const reader = new FileReader();
@@ -19,21 +22,31 @@
 		reader.readAsText(file);
 	}
 
-	function togglePlayPause() {
-		if (isPlaying) {
-			handlePause();
-		} else {
-			handlePlay();
+	$: if (browser) {
+		if (isPlaying && !animationFrameId) {
+			console.log('Starting scroll animation');
+			lastTimestamp = null;
+			animationFrameId = requestAnimationFrame(updateScroll);
+		} else if (!isPlaying && animationFrameId) {
+			console.log('Stopping scroll animation');
+			cancelAnimationFrame(animationFrameId);
+			animationFrameId = null;
 		}
+	}
+
+	function togglePlayPause() {
+		isPlaying = !isPlaying;
+		console.log('Toggle Play/Pause:', isPlaying);
 	}
 
 	function handlePlay() {
 		isPlaying = true;
-		requestAnimationFrame(scroll);
+		console.log('Handle Play');
 	}
 
 	function handlePause() {
 		isPlaying = false;
+		console.log('Handle Pause');
 	}
 
 	function handleStop() {
@@ -41,6 +54,7 @@
 		if (containerRef) {
 			containerRef.scrollTop = 0;
 		}
+		console.log('Handle Stop');
 	}
 
 	function handleRestart() {
@@ -48,7 +62,7 @@
 			containerRef.scrollTop = 0;
 		}
 		isPlaying = true;
-		requestAnimationFrame(scroll);
+		console.log('Handle Restart');
 	}
 
 	function handleFileChange(event: Event) {
@@ -62,35 +76,32 @@
 		handleStop();
 	}
 
-	let lastTime: number | null = null;
-	function scroll(time: number) {
-		if (isPlaying && containerRef && contentRef) {
-			if (lastTime !== null) {
-				const deltaTime = time - lastTime;
-				containerRef.scrollTop += (scrollSpeed * deltaTime) / 1000;
-
-				if (containerRef.scrollTop + containerRef.clientHeight >= contentRef.clientHeight) {
-					isPlaying = false;
-					return;
-				}
+	function updateScroll(timestamp: number) {
+		if (containerRef && contentRef) {
+			if (lastTimestamp === null) {
+				lastTimestamp = timestamp;
 			}
-			lastTime = time;
-			requestAnimationFrame(scroll);
-		} else {
-			lastTime = null;
-		}
-	}
+			const deltaTime = timestamp - lastTimestamp;
+			const scrollAmount = (scrollSpeed / 1000) * deltaTime;
+			containerRef.scrollTop += scrollAmount;
+			console.log('Scrolling:', scrollAmount, 'Current position:', containerRef.scrollTop);
 
-	function handleKeydown(event: KeyboardEvent) {
-		if (event.code === 'Space' && document.activeElement !== textareaRef) {
-			event.preventDefault();
-			togglePlayPause();
+			if (containerRef.scrollTop + containerRef.clientHeight >= contentRef.clientHeight) {
+				console.log('Reached end of content');
+				isPlaying = false;
+			} else {
+				lastTimestamp = timestamp;
+				animationFrameId = requestAnimationFrame(updateScroll);
+			}
+		} else {
+			console.log('Container or content ref not available');
+			animationFrameId = requestAnimationFrame(updateScroll);
 		}
 	}
 
 	function skipTime(seconds: number) {
 		if (containerRef && contentRef) {
-			const pixelsToSkip = scrollSpeed * seconds;
+			const pixelsToSkip = (scrollSpeed / 1000) * seconds * 1000; // Convert seconds to milliseconds
 			containerRef.scrollTop += pixelsToSkip;
 
 			if (containerRef.scrollTop + containerRef.clientHeight >= contentRef.clientHeight) {
@@ -103,12 +114,14 @@
 	}
 
 	function toggleFullscreen() {
-		if (!document.fullscreenElement) {
-			containerRef.requestFullscreen().catch((err) => {
-				console.error(`Error attempting to enable fullscreen: ${err.message}`);
-			});
-		} else {
-			document.exitFullscreen();
+		if (browser) {
+			if (!document.fullscreenElement) {
+				containerRef.requestFullscreen().catch((err) => {
+					console.error(`Error attempting to enable fullscreen: ${err.message}`);
+				});
+			} else {
+				document.exitFullscreen();
+			}
 		}
 	}
 
@@ -127,18 +140,25 @@
 	}
 
 	onMount(() => {
-		window.addEventListener('keydown', handleKeydown);
-		document.addEventListener('fullscreenchange', () => {
-			isFullscreen = !!document.fullscreenElement;
-			if (isFullscreen) {
-				showFullscreenControls();
-				setTimeout(hideFullscreenControls, 3000);
-			}
-		});
-		return () => {
-			window.removeEventListener('keydown', handleKeydown);
-			document.removeEventListener('fullscreenchange', () => {});
-		};
+		console.log('Component mounted');
+		if (browser) {
+			const handleFullscreenChange = () => {
+				isFullscreen = !!document.fullscreenElement;
+				if (isFullscreen) {
+					showFullscreenControls();
+					setTimeout(hideFullscreenControls, 3000);
+				}
+			};
+
+			document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+			return () => {
+				document.removeEventListener('fullscreenchange', handleFullscreenChange);
+				if (animationFrameId !== null) {
+					cancelAnimationFrame(animationFrameId);
+				}
+			};
+		}
 	});
 </script>
 
@@ -148,7 +168,7 @@
 			bind:value={text}
 			bind:this={textareaRef}
 			placeholder="Enter your text here or upload a file"
-			class="input h-40"
+			class="input h-40 w-full"
 		></textarea>
 		<div class="absolute bottom-3 right-3">
 			<label for="file-upload" class="btn btn-primary cursor-pointer">
@@ -242,7 +262,7 @@
 
 	<div
 		bind:this={containerRef}
-		class="h-64 overflow-y-hidden border rounded-lg p-4 bg-gray-100 dark:bg-gray-800 shadow-inner relative"
+		class="h-64 overflow-y-auto border rounded-lg p-4 bg-gray-100 dark:bg-gray-800 shadow-inner relative"
 		on:mousemove={showFullscreenControls}
 		on:mouseleave={hideFullscreenControls}
 	>
