@@ -4,10 +4,12 @@
 	let text = '';
 	let file: File | null = null;
 	let isPlaying = false;
-	let scrollSpeed = 50; // pixels per second
+	let scrollSpeed = 55; // Default speed set to 55
 	let containerRef: HTMLDivElement;
 	let contentRef: HTMLDivElement;
 	let textareaRef: HTMLTextAreaElement;
+	let isFullscreen = false;
+	let fullscreenControlsRef: HTMLDivElement;
 
 	$: if (file) {
 		const reader = new FileReader();
@@ -54,6 +56,12 @@
 		file = target.files ? target.files[0] : null;
 	}
 
+	function handleClear() {
+		text = '';
+		file = null;
+		handleStop();
+	}
+
 	let lastTime: number | null = null;
 	function scroll(time: number) {
 		if (isPlaying && containerRef && contentRef) {
@@ -94,10 +102,42 @@
 		}
 	}
 
+	function toggleFullscreen() {
+		if (!document.fullscreenElement) {
+			containerRef.requestFullscreen().catch((err) => {
+				console.error(`Error attempting to enable fullscreen: ${err.message}`);
+			});
+		} else {
+			document.exitFullscreen();
+		}
+	}
+
+	function showFullscreenControls() {
+		if (fullscreenControlsRef) {
+			fullscreenControlsRef.style.opacity = '1';
+			fullscreenControlsRef.style.transform = 'translateY(0)';
+		}
+	}
+
+	function hideFullscreenControls() {
+		if (fullscreenControlsRef) {
+			fullscreenControlsRef.style.opacity = '0';
+			fullscreenControlsRef.style.transform = 'translateY(100%)';
+		}
+	}
+
 	onMount(() => {
 		window.addEventListener('keydown', handleKeydown);
+		document.addEventListener('fullscreenchange', () => {
+			isFullscreen = !!document.fullscreenElement;
+			if (isFullscreen) {
+				showFullscreenControls();
+				setTimeout(hideFullscreenControls, 3000);
+			}
+		});
 		return () => {
 			window.removeEventListener('keydown', handleKeydown);
+			document.removeEventListener('fullscreenchange', () => {});
 		};
 	});
 </script>
@@ -142,14 +182,14 @@
 		<button
 			on:click={() => skipTime(-7)}
 			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
-			aria-label="Rewind"
+			title="Rewind 7 seconds"
 		>
 			<img src="/backward.svg" alt="Rewind" class="w-8 h-8 dark:invert" />
 		</button>
 		<button
 			on:click={togglePlayPause}
 			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
-			aria-label={isPlaying ? 'Pause' : 'Play'}
+			title={isPlaying ? 'Pause' : 'Play'}
 		>
 			<img
 				src={isPlaying ? '/pause.svg' : '/play.svg'}
@@ -160,23 +200,37 @@
 		<button
 			on:click={handleStop}
 			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
-			aria-label="Stop"
+			title="Stop"
 		>
 			<img src="/stop.svg" alt="Stop" class="w-8 h-8 dark:invert" />
 		</button>
 		<button
 			on:click={handleRestart}
 			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
-			aria-label="Restart"
+			title="Restart"
 		>
 			<img src="/restart.svg" alt="Restart" class="w-8 h-8 dark:invert" />
 		</button>
 		<button
 			on:click={() => skipTime(7)}
 			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
-			aria-label="Fast Forward"
+			title="Fast Forward 7 seconds"
 		>
 			<img src="/forward.svg" alt="Fast Forward" class="w-8 h-8 dark:invert" />
+		</button>
+		<button
+			on:click={toggleFullscreen}
+			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
+			title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+		>
+			<img src="/fullscreen.svg" alt="Fullscreen" class="w-8 h-8 dark:invert" />
+		</button>
+		<button
+			on:click={handleClear}
+			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
+			title="Clear Text"
+		>
+			<img src="/clear.svg" alt="Clear" class="w-8 h-8 dark:invert" />
 		</button>
 	</div>
 
@@ -188,11 +242,79 @@
 
 	<div
 		bind:this={containerRef}
-		class="h-64 overflow-y-hidden border rounded-lg p-4 bg-gray-100 dark:bg-gray-800 shadow-inner"
+		class="h-64 overflow-y-hidden border rounded-lg p-4 bg-gray-100 dark:bg-gray-800 shadow-inner relative"
+		on:mousemove={showFullscreenControls}
+		on:mouseleave={hideFullscreenControls}
 	>
-		<div bind:this={contentRef} class="text-3xl leading-relaxed">
+		<div
+			bind:this={contentRef}
+			class="text-3xl leading-relaxed fullscreen-text whitespace-pre-wrap"
+		>
 			{text}
 		</div>
+		{#if isFullscreen}
+			<div
+				bind:this={fullscreenControlsRef}
+				class="fullscreen-controls fixed bottom-0 left-0 right-0 bg-black bg-opacity-50 p-4 transition-all duration-300 ease-in-out"
+			>
+				<div class="flex flex-col items-center space-y-4">
+					<div class="flex justify-center space-x-4">
+						<button
+							on:click={() => skipTime(-7)}
+							class="btn bg-white hover:bg-gray-200"
+							title="Rewind 7 seconds"
+						>
+							<img src="/backward.svg" alt="Rewind" class="w-8 h-8" />
+						</button>
+						<button
+							on:click={togglePlayPause}
+							class="btn bg-white hover:bg-gray-200"
+							title={isPlaying ? 'Pause' : 'Play'}
+						>
+							<img
+								src={isPlaying ? '/pause.svg' : '/play.svg'}
+								alt={isPlaying ? 'Pause' : 'Play'}
+								class="w-8 h-8"
+							/>
+						</button>
+						<button on:click={handleStop} class="btn bg-white hover:bg-gray-200" title="Stop">
+							<img src="/stop.svg" alt="Stop" class="w-8 h-8" />
+						</button>
+						<button on:click={handleRestart} class="btn bg-white hover:bg-gray-200" title="Restart">
+							<img src="/restart.svg" alt="Restart" class="w-8 h-8" />
+						</button>
+						<button
+							on:click={() => skipTime(7)}
+							class="btn bg-white hover:bg-gray-200"
+							title="Fast Forward 7 seconds"
+						>
+							<img src="/forward.svg" alt="Fast Forward" class="w-8 h-8" />
+						</button>
+						<button
+							on:click={toggleFullscreen}
+							class="btn bg-white hover:bg-gray-200"
+							title="Exit Fullscreen"
+						>
+							<img src="/fullscreen.svg" alt="Fullscreen" class="w-8 h-8" />
+						</button>
+					</div>
+					<div class="w-full max-w-md">
+						<label for="fullscreen-speed" class="block mb-2 text-sm font-medium text-white"
+							>Scroll Speed: {scrollSpeed}</label
+						>
+						<input
+							type="range"
+							id="fullscreen-speed"
+							bind:value={scrollSpeed}
+							min="10"
+							max="100"
+							step="5"
+							class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+						/>
+					</div>
+				</div>
+			</div>
+		{/if}
 	</div>
 </div>
 
@@ -221,5 +343,20 @@
 
 	:global(.dark) input[type='range']::-moz-range-thumb {
 		background: theme('colors.primary.dark');
+	}
+
+	:fullscreen .fullscreen-text {
+		font-size: 6rem;
+		line-height: 1.2;
+	}
+
+	:fullscreen .fullscreen-controls {
+		opacity: 0;
+		transform: translateY(100%);
+	}
+
+	:fullscreen .fullscreen-controls:hover {
+		opacity: 1;
+		transform: translateY(0);
 	}
 </style>
