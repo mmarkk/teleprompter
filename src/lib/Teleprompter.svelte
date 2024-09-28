@@ -7,6 +7,7 @@
 	let scrollSpeed = 50; // pixels per second
 	let containerRef: HTMLDivElement;
 	let contentRef: HTMLDivElement;
+	let textareaRef: HTMLTextAreaElement;
 
 	$: if (file) {
 		const reader = new FileReader();
@@ -16,19 +17,24 @@
 		reader.readAsText(file);
 	}
 
+	function togglePlayPause() {
+		if (isPlaying) {
+			handlePause();
+		} else {
+			handlePlay();
+		}
+	}
+
 	function handlePlay() {
-		console.log('Play button clicked');
 		isPlaying = true;
 		requestAnimationFrame(scroll);
 	}
 
 	function handlePause() {
-		console.log('Pause button clicked');
 		isPlaying = false;
 	}
 
 	function handleStop() {
-		console.log('Stop button clicked');
 		isPlaying = false;
 		if (containerRef) {
 			containerRef.scrollTop = 0;
@@ -36,7 +42,6 @@
 	}
 
 	function handleRestart() {
-		console.log('Restart button clicked');
 		if (containerRef) {
 			containerRef.scrollTop = 0;
 		}
@@ -56,9 +61,7 @@
 				const deltaTime = time - lastTime;
 				containerRef.scrollTop += (scrollSpeed * deltaTime) / 1000;
 
-				// Check if we've reached the bottom
 				if (containerRef.scrollTop + containerRef.clientHeight >= contentRef.clientHeight) {
-					console.log('Reached the bottom, stopping playback');
 					isPlaying = false;
 					return;
 				}
@@ -70,24 +73,60 @@
 		}
 	}
 
+	function handleKeydown(event: KeyboardEvent) {
+		if (event.code === 'Space' && document.activeElement !== textareaRef) {
+			event.preventDefault();
+			togglePlayPause();
+		}
+	}
+
+	function skipTime(seconds: number) {
+		if (containerRef && contentRef) {
+			const pixelsToSkip = scrollSpeed * seconds;
+			containerRef.scrollTop += pixelsToSkip;
+
+			if (containerRef.scrollTop + containerRef.clientHeight >= contentRef.clientHeight) {
+				isPlaying = false;
+				containerRef.scrollTop = contentRef.clientHeight - containerRef.clientHeight;
+			} else if (containerRef.scrollTop < 0) {
+				containerRef.scrollTop = 0;
+			}
+		}
+	}
+
 	onMount(() => {
-		console.log('Component mounted');
+		window.addEventListener('keydown', handleKeydown);
+		return () => {
+			window.removeEventListener('keydown', handleKeydown);
+		};
 	});
 </script>
 
-<div class="max-w-2xl mx-auto p-4">
-	<div class="mb-4">
+<div class="p-6 space-y-6">
+	<div class="relative">
 		<textarea
 			bind:value={text}
+			bind:this={textareaRef}
 			placeholder="Enter your text here or upload a file"
-			class="w-full h-32 p-2 border rounded"
+			class="input h-40"
 		></textarea>
+		<div class="absolute bottom-3 right-3">
+			<label for="file-upload" class="btn btn-primary cursor-pointer">
+				<img src="/upload.svg" alt="Upload" class="w-5 h-5 inline-block mr-2" />
+				Upload File
+			</label>
+			<input
+				id="file-upload"
+				type="file"
+				accept=".txt"
+				on:change={handleFileChange}
+				class="hidden"
+			/>
+		</div>
 	</div>
-	<div class="mb-4">
-		<input type="file" accept=".txt" on:change={handleFileChange} class="mb-2" />
-	</div>
-	<div class="mb-4">
-		<label for="speed" class="block mb-2">Scroll Speed:</label>
+
+	<div>
+		<label for="speed" class="block mb-2 text-sm font-medium">Scroll Speed: {scrollSpeed}</label>
 		<input
 			type="range"
 			id="speed"
@@ -95,31 +134,92 @@
 			min="10"
 			max="100"
 			step="5"
-			class="w-full"
+			class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
 		/>
 	</div>
-	<div class="flex space-x-4 mb-4">
-		<button on:click={handlePlay} class="p-2 rounded-full hover:bg-gray-200">
-			<img src="/play.svg" alt="Play" class="w-8 h-8" />
+
+	<div class="flex justify-center space-x-4">
+		<button
+			on:click={() => skipTime(-7)}
+			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
+			aria-label="Rewind"
+		>
+			<img src="/backward.svg" alt="Rewind" class="w-8 h-8 dark:invert" />
 		</button>
-		<button on:click={handlePause} class="p-2 rounded-full hover:bg-gray-200">
-			<img src="/pause.svg" alt="Pause" class="w-8 h-8" />
+		<button
+			on:click={togglePlayPause}
+			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
+			aria-label={isPlaying ? 'Pause' : 'Play'}
+		>
+			<img
+				src={isPlaying ? '/pause.svg' : '/play.svg'}
+				alt={isPlaying ? 'Pause' : 'Play'}
+				class="w-8 h-8 dark:invert"
+			/>
 		</button>
-		<button on:click={handleStop} class="p-2 rounded-full hover:bg-gray-200">
-			<img src="/stop.svg" alt="Stop" class="w-8 h-8" />
+		<button
+			on:click={handleStop}
+			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
+			aria-label="Stop"
+		>
+			<img src="/stop.svg" alt="Stop" class="w-8 h-8 dark:invert" />
 		</button>
-		<button on:click={handleRestart} class="p-2 rounded-full hover:bg-gray-200">
-			<img src="/restart.svg" alt="Restart" class="w-8 h-8" />
+		<button
+			on:click={handleRestart}
+			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
+			aria-label="Restart"
+		>
+			<img src="/restart.svg" alt="Restart" class="w-8 h-8 dark:invert" />
+		</button>
+		<button
+			on:click={() => skipTime(7)}
+			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
+			aria-label="Fast Forward"
+		>
+			<img src="/forward.svg" alt="Fast Forward" class="w-8 h-8 dark:invert" />
 		</button>
 	</div>
-	<div class="mb-2">
-		Status: <span class={isPlaying ? 'text-green-500 font-bold' : 'text-red-500'}
+
+	<div class="text-center font-medium">
+		Status: <span class={isPlaying ? 'text-green-500' : 'text-red-500'}
 			>{isPlaying ? 'Playing' : 'Stopped'}</span
 		>
 	</div>
-	<div bind:this={containerRef} class="h-64 overflow-y-hidden border rounded p-4 bg-gray-100">
+
+	<div
+		bind:this={containerRef}
+		class="h-64 overflow-y-hidden border rounded-lg p-4 bg-gray-100 dark:bg-gray-800 shadow-inner"
+	>
 		<div bind:this={contentRef} class="text-3xl leading-relaxed">
 			{text}
 		</div>
 	</div>
 </div>
+
+<style>
+	input[type='range']::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		background: theme('colors.primary.light');
+		cursor: pointer;
+	}
+
+	input[type='range']::-moz-range-thumb {
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		background: theme('colors.primary.light');
+		cursor: pointer;
+	}
+
+	:global(.dark) input[type='range']::-webkit-slider-thumb {
+		background: theme('colors.primary.dark');
+	}
+
+	:global(.dark) input[type='range']::-moz-range-thumb {
+		background: theme('colors.primary.dark');
+	}
+</style>

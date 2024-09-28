@@ -2,13 +2,9 @@
 	import Teleprompter from '$lib/Teleprompter.svelte';
 </script>
 
-<main class="container mx-auto p-4">
-	<h1 class="text-3xl font-bold mb-4">Teleprompter App</h1>
-	<Teleprompter />
-</main>
-
-<style lang="postcss">
-	:global(html) {
-		background-color: theme(colors.gray.100);
-	}
-</style>
+<div class="max-w-4xl mx-auto">
+	<h2 class="text-3xl font-bold mb-6 text-center">Start Your Teleprompter Session</h2>
+	<div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
+		<Teleprompter />
+	</div>
+</div>
