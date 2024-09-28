@@ -2,7 +2,7 @@
 	import '../app.css';
 	import { onMount } from 'svelte';
 
-	let darkMode = false;
+	let darkMode = true;
 
 	function toggleDarkMode() {
 		darkMode = !darkMode;
