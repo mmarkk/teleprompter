@@ -24,11 +24,11 @@
 
 	$: if (browser) {
 		if (isPlaying && !animationFrameId) {
-			console.log('Starting scroll animation');
+			// console.log('Starting scroll animation');
 			lastTimestamp = null;
 			animationFrameId = requestAnimationFrame(updateScroll);
 		} else if (!isPlaying && animationFrameId) {
-			console.log('Stopping scroll animation');
+			// console.log('Stopping scroll animation');
 			cancelAnimationFrame(animationFrameId);
 			animationFrameId = null;
 		}
@@ -36,17 +36,17 @@
 
 	function togglePlayPause() {
 		isPlaying = !isPlaying;
-		console.log('Toggle Play/Pause:', isPlaying);
+		// console.log('Toggle Play/Pause:', isPlaying);
 	}
 
 	function handlePlay() {
 		isPlaying = true;
-		console.log('Handle Play');
+		// console.log('Handle Play');
 	}
 
 	function handlePause() {
 		isPlaying = false;
-		console.log('Handle Pause');
+		// console.log('Handle Pause');
 	}
 
 	function handleStop() {
@@ -54,7 +54,7 @@
 		if (containerRef) {
 			containerRef.scrollTop = 0;
 		}
-		console.log('Handle Stop');
+		// console.log('Handle Stop');
 	}
 
 	function handleRestart() {
@@ -62,7 +62,7 @@
 			containerRef.scrollTop = 0;
 		}
 		isPlaying = true;
-		console.log('Handle Restart');
+		// console.log('Handle Restart');
 	}
 
 	function handleFileChange(event: Event) {
@@ -84,17 +84,17 @@
 			const deltaTime = timestamp - lastTimestamp;
 			const scrollAmount = (scrollSpeed / 1000) * deltaTime;
 			containerRef.scrollTop += scrollAmount;
-			console.log('Scrolling:', scrollAmount, 'Current position:', containerRef.scrollTop);
+			// console.log('Scrolling:', scrollAmount, 'Current position:', containerRef.scrollTop);
 
 			if (containerRef.scrollTop + containerRef.clientHeight >= contentRef.clientHeight) {
-				console.log('Reached end of content');
+				// console.log('Reached end of content');
 				isPlaying = false;
 			} else {
 				lastTimestamp = timestamp;
 				animationFrameId = requestAnimationFrame(updateScroll);
 			}
 		} else {
-			console.log('Container or content ref not available');
+			// console.log('Container or content ref not available');
 			animationFrameId = requestAnimationFrame(updateScroll);
 		}
 	}
@@ -140,7 +140,7 @@
 	}
 
 	onMount(() => {
-		console.log('Component mounted');
+		// console.log('Component mounted');
 		if (browser) {
 			const handleFullscreenChange = () => {
 				isFullscreen = !!document.fullscreenElement;
