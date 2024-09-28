@@ -5,7 +5,7 @@
 	let text = '';
 	let file: File | null = null;
 	let isPlaying = false;
-	let scrollSpeed = 55; // Default speed set to 55
+	let scrollSpeed = 60; // Default speed set to 55
 	let containerRef: HTMLDivElement;
 	let contentRef: HTMLDivElement;
 	let textareaRef: HTMLTextAreaElement;
@@ -265,6 +265,8 @@
 		class="h-64 overflow-y-auto border rounded-lg p-4 bg-gray-100 dark:bg-gray-800 shadow-inner relative"
 		on:mousemove={showFullscreenControls}
 		on:mouseleave={hideFullscreenControls}
+		role="region"
+		aria-label="Teleprompter text container"
 	>
 		<div
 			bind:this={contentRef}
