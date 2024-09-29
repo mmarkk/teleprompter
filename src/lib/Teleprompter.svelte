@@ -24,11 +24,9 @@
 
 	$: if (browser) {
 		if (isPlaying && !animationFrameId) {
-			// console.log('Starting scroll animation');
 			lastTimestamp = null;
 			animationFrameId = requestAnimationFrame(updateScroll);
 		} else if (!isPlaying && animationFrameId) {
-			// console.log('Stopping scroll animation');
 			cancelAnimationFrame(animationFrameId);
 			animationFrameId = null;
 		}
@@ -36,17 +34,14 @@
 
 	function togglePlayPause() {
 		isPlaying = !isPlaying;
-		// console.log('Toggle Play/Pause:', isPlaying);
 	}
 
 	function handlePlay() {
 		isPlaying = true;
-		// console.log('Handle Play');
 	}
 
 	function handlePause() {
 		isPlaying = false;
-		// console.log('Handle Pause');
 	}
 
 	function handleStop() {
@@ -54,7 +49,6 @@
 		if (containerRef) {
 			containerRef.scrollTop = 0;
 		}
-		// console.log('Handle Stop');
 	}
 
 	function handleRestart() {
@@ -62,7 +56,6 @@
 			containerRef.scrollTop = 0;
 		}
 		isPlaying = true;
-		// console.log('Handle Restart');
 	}
 
 	function handleFileChange(event: Event) {
@@ -84,17 +77,14 @@
 			const deltaTime = timestamp - lastTimestamp;
 			const scrollAmount = (scrollSpeed / 1000) * deltaTime;
 			containerRef.scrollTop += scrollAmount;
-			// console.log('Scrolling:', scrollAmount, 'Current position:', containerRef.scrollTop);
 
 			if (containerRef.scrollTop + containerRef.clientHeight >= contentRef.clientHeight) {
-				// console.log('Reached end of content');
 				isPlaying = false;
 			} else {
 				lastTimestamp = timestamp;
 				animationFrameId = requestAnimationFrame(updateScroll);
 			}
 		} else {
-			// console.log('Container or content ref not available');
 			animationFrameId = requestAnimationFrame(updateScroll);
 		}
 	}
@@ -140,7 +130,6 @@
 	}
 
 	onMount(() => {
-		// console.log('Component mounted');
 		if (browser) {
 			const handleFullscreenChange = () => {
 				isFullscreen = !!document.fullscreenElement;
@@ -162,7 +151,7 @@
 	});
 </script>
 
-<div class="p-6 space-y-6">
+<div class="p-4 space-y-4 sm:p-6 sm:space-y-6">
 	<div class="relative">
 		<textarea
 			bind:value={text}
@@ -171,8 +160,12 @@
 			class="input h-40 w-full"
 		></textarea>
 		<div class="absolute bottom-3 right-3">
-			<label for="file-upload" class="btn btn-primary cursor-pointer">
-				<img src="/upload.svg" alt="Upload" class="w-5 h-5 inline-block mr-2" />
+			<label for="file-upload" class="btn btn-primary cursor-pointer text-sm sm:text-base">
+				<img
+					src="/upload.svg"
+					alt="Upload"
+					class="w-4 h-4 sm:w-5 sm:h-5 inline-block mr-1 sm:mr-2"
+				/>
 				Upload File
 			</label>
 			<input
@@ -198,66 +191,98 @@
 		/>
 	</div>
 
-	<div class="flex justify-center space-x-4">
+	<div class="flex flex-wrap justify-center gap-2 sm:gap-4">
 		<button
 			on:click={() => skipTime(-7)}
-			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
+			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 sm:p-3"
 			title="Rewind 7 seconds"
 		>
-			<img src="/backward.svg" alt="Rewind" class="w-8 h-8 dark:invert" />
+			<img src="/backward.svg" alt="Rewind" class="w-6 h-6 sm:w-8 sm:h-8 dark:invert" />
 		</button>
 		<button
 			on:click={togglePlayPause}
-			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
+			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 sm:p-3"
 			title={isPlaying ? 'Pause' : 'Play'}
 		>
 			<img
 				src={isPlaying ? '/pause.svg' : '/play.svg'}
 				alt={isPlaying ? 'Pause' : 'Play'}
-				class="w-8 h-8 dark:invert"
+				class="w-6 h-6 sm:w-8 sm:h-8 dark:invert"
 			/>
 		</button>
 		<button
 			on:click={handleStop}
-			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
+			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 sm:p-3"
 			title="Stop"
 		>
-			<img src="/stop.svg" alt="Stop" class="w-8 h-8 dark:invert" />
+			<img src="/stop.svg" alt="Stop" class="w-6 h-6 sm:w-8 sm:h-8 dark:invert" />
 		</button>
 		<button
 			on:click={handleRestart}
-			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
+			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 sm:p-3"
 			title="Restart"
 		>
-			<img src="/restart.svg" alt="Restart" class="w-8 h-8 dark:invert" />
+			<img src="/restart.svg" alt="Restart" class="w-6 h-6 sm:w-8 sm:h-8 dark:invert" />
 		</button>
 		<button
 			on:click={() => skipTime(7)}
-			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
+			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 sm:p-3"
 			title="Fast Forward 7 seconds"
 		>
-			<img src="/forward.svg" alt="Fast Forward" class="w-8 h-8 dark:invert" />
+			<img src="/forward.svg" alt="Fast Forward" class="w-6 h-6 sm:w-8 sm:h-8 dark:invert" />
 		</button>
 		<button
 			on:click={toggleFullscreen}
-			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
+			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 sm:p-3"
 			title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
 		>
-			<img src="/fullscreen.svg" alt="Fullscreen" class="w-8 h-8 dark:invert" />
+			<img src="/fullscreen.svg" alt="Fullscreen" class="w-6 h-6 sm:w-8 sm:h-8 dark:invert" />
 		</button>
 		<button
 			on:click={handleClear}
-			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
+			class="btn bg-white dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 sm:p-3"
 			title="Clear Text"
 		>
-			<img src="/clear.svg" alt="Clear" class="w-8 h-8 dark:invert" />
+			<img src="/clear.svg" alt="Clear" class="w-6 h-6 sm:w-8 sm:h-8 dark:invert" />
 		</button>
 	</div>
 
-	<div class="text-center font-medium">
-		Status: <span class={isPlaying ? 'text-green-500' : 'text-red-500'}
-			>{isPlaying ? 'Playing' : 'Stopped'}</span
-		>
+	<div class="flex justify-center items-center space-x-2">
+		<div class="text-sm font-medium">Status:</div>
+		<div class="relative w-8 h-8">
+			<svg
+				class="w-8 h-8 {isPlaying
+					? 'text-green-500'
+					: 'text-red-500'} transition-colors duration-300"
+				fill="currentColor"
+				viewBox="0 0 20 20"
+				xmlns="http://www.w3.org/2000/svg"
+			>
+				<circle cx="10" cy="10" r="8" />
+			</svg>
+			<div class="absolute inset-0 flex items-center justify-center">
+				{#if isPlaying}
+					<svg
+						class="w-4 h-4 text-white"
+						fill="currentColor"
+						viewBox="0 0 20 20"
+						xmlns="http://www.w3.org/2000/svg"
+					>
+						<path d="M5 4v12l10-6z" />
+					</svg>
+				{:else}
+					<svg
+						class="w-4 h-4 text-white"
+						fill="currentColor"
+						viewBox="0 0 20 20"
+						xmlns="http://www.w3.org/2000/svg"
+					>
+						<path fill-rule="evenodd" d="M5 4h3v12H5V4zm7 0h3v12h-3V4z" clip-rule="evenodd" />
+					</svg>
+				{/if}
+			</div>
+		</div>
+		<div class="text-sm font-medium">{isPlaying ? 'Playing' : 'Stopped'}</div>
 	</div>
 
 	<div
@@ -280,44 +305,52 @@
 				class="fullscreen-controls fixed bottom-0 left-0 right-0 bg-black bg-opacity-50 p-4 transition-all duration-300 ease-in-out"
 			>
 				<div class="flex flex-col items-center space-y-4">
-					<div class="flex justify-center space-x-4">
+					<div class="flex flex-wrap justify-center gap-2 sm:gap-4">
 						<button
 							on:click={() => skipTime(-7)}
-							class="btn bg-white hover:bg-gray-200"
+							class="btn bg-white hover:bg-gray-200 p-2 sm:p-3"
 							title="Rewind 7 seconds"
 						>
-							<img src="/backward.svg" alt="Rewind" class="w-8 h-8" />
+							<img src="/backward.svg" alt="Rewind" class="w-6 h-6 sm:w-8 sm:h-8" />
 						</button>
 						<button
 							on:click={togglePlayPause}
-							class="btn bg-white hover:bg-gray-200"
+							class="btn bg-white hover:bg-gray-200 p-2 sm:p-3"
 							title={isPlaying ? 'Pause' : 'Play'}
 						>
 							<img
 								src={isPlaying ? '/pause.svg' : '/play.svg'}
 								alt={isPlaying ? 'Pause' : 'Play'}
-								class="w-8 h-8"
+								class="w-6 h-6 sm:w-8 sm:h-8"
 							/>
 						</button>
-						<button on:click={handleStop} class="btn bg-white hover:bg-gray-200" title="Stop">
-							<img src="/stop.svg" alt="Stop" class="w-8 h-8" />
+						<button
+							on:click={handleStop}
+							class="btn bg-white hover:bg-gray-200 p-2 sm:p-3"
+							title="Stop"
+						>
+							<img src="/stop.svg" alt="Stop" class="w-6 h-6 sm:w-8 sm:h-8" />
 						</button>
-						<button on:click={handleRestart} class="btn bg-white hover:bg-gray-200" title="Restart">
-							<img src="/restart.svg" alt="Restart" class="w-8 h-8" />
+						<button
+							on:click={handleRestart}
+							class="btn bg-white hover:bg-gray-200 p-2 sm:p-3"
+							title="Restart"
+						>
+							<img src="/restart.svg" alt="Restart" class="w-6 h-6 sm:w-8 sm:h-8" />
 						</button>
 						<button
 							on:click={() => skipTime(7)}
-							class="btn bg-white hover:bg-gray-200"
+							class="btn bg-white hover:bg-gray-200 p-2 sm:p-3"
 							title="Fast Forward 7 seconds"
 						>
-							<img src="/forward.svg" alt="Fast Forward" class="w-8 h-8" />
+							<img src="/forward.svg" alt="Fast Forward" class="w-6 h-6 sm:w-8 sm:h-8" />
 						</button>
 						<button
 							on:click={toggleFullscreen}
-							class="btn bg-white hover:bg-gray-200"
+							class="btn bg-white hover:bg-gray-200 p-2 sm:p-3"
 							title="Exit Fullscreen"
 						>
-							<img src="/fullscreen.svg" alt="Fullscreen" class="w-8 h-8" />
+							<img src="/fullscreen.svg" alt="Fullscreen" class="w-6 h-6 sm:w-8 sm:h-8" />
 						</button>
 					</div>
 					<div class="w-full max-w-md">
@@ -380,5 +413,15 @@
 	:fullscreen .fullscreen-controls:hover {
 		opacity: 1;
 		transform: translateY(0);
+	}
+
+	@media (max-width: 360px) {
+		.btn {
+			padding: 0.5rem;
+		}
+		.btn img {
+			width: 1.25rem;
+			height: 1.25rem;
+		}
 	}
 </style>
