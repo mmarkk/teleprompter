@@ -25,7 +25,8 @@
 	class="min-h-screen bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark transition-colors duration-300"
 >
 	<nav class="p-4 flex justify-between items-center">
-		<h1 class="text-2xl font-bold">Teleprompter App</h1>
+		<h1 class="text-2xl font-bold">TelePrompter</h1>
+
 		<button
 			on:click={toggleDarkMode}
 			class="p-2 rounded-full bg-primary-light dark:bg-primary-dark text-white hover:bg-opacity-80 transition-colors duration-300"
