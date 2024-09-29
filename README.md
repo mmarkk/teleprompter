@@ -24,7 +24,7 @@ Check out the live version of the teleprompter: [https://teleprompter.mmarkk.dev
 1. Clone the repository:
 
    ```
-   git clone https://github.com/yourusername/teleprompter.git
+   git clone https://github.com/mmarkk/teleprompter.git
    cd teleprompter
    ```
 
